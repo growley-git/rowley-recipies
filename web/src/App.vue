@@ -11,7 +11,7 @@ import AlertStack from "./components/AlertStack.vue";
       <nav class="nav-links">
         <RouterLink class="icon-text" to="/">
           <span class="mdi mdi-book-open-variant icon-inline icon-leading" aria-hidden="true"></span>
-          Archive
+          Recipes
         </RouterLink>
         <RouterLink class="icon-text" to="/grocery">
           <span class="mdi mdi-cart-outline icon-inline icon-leading" aria-hidden="true"></span>
@@ -19,7 +19,7 @@ import AlertStack from "./components/AlertStack.vue";
         </RouterLink>
         <RouterLink class="icon-text" to="/admin">
           <span class="mdi mdi-lock-outline icon-inline icon-leading" aria-hidden="true"></span>
-          Admin
+          Chefs Portal
         </RouterLink>
       </nav>
     </header>
@@ -28,6 +28,12 @@ import AlertStack from "./components/AlertStack.vue";
     </main>
     <footer class="site-footer">
       <RouterLink to="/spin" class="footer-easter">Can’t decide?</RouterLink>
+      <hr>
+      <p>
+        <small>
+          &copy; {{ new Date().getFullYear() }} Rowley Recipes. All rights reserved.
+        </small>
+      </p>
     </footer>
   </div>
 </template>
