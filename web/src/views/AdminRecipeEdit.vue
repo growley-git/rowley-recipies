@@ -7,6 +7,7 @@ import { useRouter } from "vue-router";
 import IngredientEditor, {
   type IngredientForm,
 } from "../components/IngredientEditor.vue";
+import { useRegisterBreadcrumbDetail } from "../composables/breadcrumbDetail";
 import { useAlerts } from "../composables/useAlerts";
 
 const TAGS = gql`
@@ -100,6 +101,14 @@ const isNew = computed(() => !props.id);
 
 const title = ref("");
 const slug = ref("");
+
+const breadcrumbTitle = computed(() =>
+  isNew.value
+    ? title.value.trim() || "New recipe"
+    : title.value.trim() || "Edit recipe"
+);
+useRegisterBreadcrumbDetail(breadcrumbTitle);
+
 const steps = ref<string[]>([""]);
 const selectedTagIds = ref<string[]>([]);
 const ingredients = ref<IngredientForm[]>([emptyIngredient()]);

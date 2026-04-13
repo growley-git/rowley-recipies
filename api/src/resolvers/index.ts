@@ -6,6 +6,11 @@ import {
 } from "@rowley/domain";
 import { assertAdmin, checkAdminPassword, signAdminToken } from "../auth.js";
 import type { GraphQLContext } from "../context.js";
+import {
+  loadReviewStatsForSlug,
+  loadReviewStatsMap,
+  type ReviewStats,
+} from "../reviewStats.js";
 import { slugify } from "../slug.js";
 
 function requireAdmin(ctx: GraphQLContext) {
@@ -123,10 +128,15 @@ export const resolvers = {
       ctx: GraphQLContext
     ) {
       if (!args.id && !args.slug) return null;
-      return ctx.recipeContent.findFirst({
+      const r = await ctx.recipeContent.findFirst({
         id: args.id ?? undefined,
         slug: args.slug ?? undefined,
       });
+      if (!r) return null;
+      const statsMap = await loadReviewStatsMap(ctx.prisma, [r.slug]);
+      const __reviewStats: ReviewStats =
+        statsMap.get(r.slug) ?? { averageRating: null, reviewCount: 0 };
+      return { ...r, __reviewStats };
     },
 
     async recipes(
@@ -140,7 +150,7 @@ export const resolvers = {
       const first = Math.min(args.pagination?.first ?? 20, 100);
       const after = args.pagination?.after;
       const filter = args.filter ?? {};
-      return ctx.recipeContent.findRecipesConnection({
+      const conn = await ctx.recipeContent.findRecipesConnection({
         filter: {
           publishedOnly: filter.publishedOnly,
           tagSlug: filter.tagSlug,
@@ -149,6 +159,22 @@ export const resolvers = {
         first,
         after,
       });
+      const slugs = conn.edges.map((e) => e.node.slug);
+      const statsMap = await loadReviewStatsMap(ctx.prisma, slugs);
+      return {
+        ...conn,
+        edges: conn.edges.map((e) => {
+          const __reviewStats: ReviewStats =
+            statsMap.get(e.node.slug) ?? {
+              averageRating: null,
+              reviewCount: 0,
+            };
+          return {
+            ...e,
+            node: { ...e.node, __reviewStats },
+          };
+        }),
+      };
     },
 
     tags(_: unknown, __: unknown, ctx: GraphQLContext) {
@@ -446,6 +472,73 @@ export const resolvers = {
       return allTags.slice(0, 5);
     },
 
+    async submitRecipeReview(
+      _: unknown,
+      args: {
+        recipeSlug: string;
+        input: { rating: number; body?: string | null; authorName?: string | null };
+      },
+      ctx: GraphQLContext
+    ) {
+      const slug = args.recipeSlug.trim();
+      if (!slug) {
+        throw new GraphQLError("recipeSlug is required", {
+          extensions: { code: "BAD_USER_INPUT" },
+        });
+      }
+      const recipe = await ctx.recipeContent.findFirst({ slug });
+      if (!recipe?.publishedAt) {
+        throw new GraphQLError("Recipe not found or not published", {
+          extensions: { code: "NOT_FOUND" },
+        });
+      }
+      const rating = args.input.rating;
+      if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+        throw new GraphQLError("Rating must be a whole number from 1 to 5", {
+          extensions: { code: "BAD_USER_INPUT" },
+        });
+      }
+      const bodyRaw = args.input.body?.trim() ?? "";
+      const body = bodyRaw.length ? bodyRaw : null;
+      if (body && body.length > 2000) {
+        throw new GraphQLError("Review text must be 2000 characters or less", {
+          extensions: { code: "BAD_USER_INPUT" },
+        });
+      }
+      const authorRaw = args.input.authorName?.trim() ?? "";
+      const authorName = authorRaw.length ? authorRaw.slice(0, 80) : null;
+
+      const row = await ctx.prisma.recipeReview.upsert({
+        where: {
+          recipeSlug_sessionKey: {
+            recipeSlug: recipe.slug,
+            sessionKey: ctx.sessionKey,
+          },
+        },
+        create: {
+          recipeSlug: recipe.slug,
+          sessionKey: ctx.sessionKey,
+          rating,
+          body,
+          authorName,
+        },
+        update: {
+          rating,
+          body,
+          authorName,
+        },
+      });
+
+      return {
+        id: row.id,
+        rating: row.rating,
+        body: row.body,
+        authorName: row.authorName,
+        createdAt: row.createdAt,
+        mine: true,
+      };
+    },
+
     async summarizeRecipe(
       _: unknown,
       args: { recipeId: string },
@@ -491,6 +584,36 @@ export const resolvers = {
     },
     tags(parent: { tags?: Array<{ tag: unknown }> }) {
       return (parent.tags ?? []).map((t) => t.tag);
+    },
+    reviewStats(
+      parent: { __reviewStats?: ReviewStats; slug: string },
+      _: unknown,
+      ctx: GraphQLContext
+    ) {
+      if (parent.__reviewStats !== undefined) {
+        return parent.__reviewStats;
+      }
+      return loadReviewStatsForSlug(ctx.prisma, parent.slug);
+    },
+    async reviews(
+      parent: { slug: string },
+      args: { first?: number | null },
+      ctx: GraphQLContext
+    ) {
+      const first = Math.min(args.first ?? 50, 100);
+      const rows = await ctx.prisma.recipeReview.findMany({
+        where: { recipeSlug: parent.slug },
+        orderBy: { createdAt: "desc" },
+        take: first,
+      });
+      return rows.map((r) => ({
+        id: r.id,
+        rating: r.rating,
+        body: r.body,
+        authorName: r.authorName,
+        createdAt: r.createdAt,
+        mine: r.sessionKey === ctx.sessionKey,
+      }));
     },
   },
 

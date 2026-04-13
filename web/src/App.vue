@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from "vue-router";
 import AlertStack from "./components/AlertStack.vue";
+import BreadcrumbBar from "./components/BreadcrumbBar.vue";
 </script>
 
 <template>
@@ -24,6 +25,7 @@ import AlertStack from "./components/AlertStack.vue";
       </nav>
     </header>
     <main class="main-body">
+      <BreadcrumbBar />
       <RouterView />
     </main>
     <footer class="site-footer">

@@ -67,3 +67,18 @@ model GroceryLine {
 
   @@index([sessionKey])
 }
+
+/// One review per browser session per recipe (keyed by slug so it works in db or file mode).
+model RecipeReview {
+  id         String   @id @default(cuid())
+  recipeSlug String
+  sessionKey String
+  rating     Int
+  body       String?
+  authorName String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([recipeSlug, sessionKey])
+  @@index([recipeSlug])
+}

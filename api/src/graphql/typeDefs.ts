@@ -23,6 +23,20 @@ export const typeDefs = /* GraphQL */ `
     text: String!
   }
 
+  type RecipeReviewStats {
+    averageRating: Float
+    reviewCount: Int!
+  }
+
+  type RecipeReview {
+    id: ID!
+    rating: Int!
+    body: String
+    authorName: String
+    createdAt: DateTime!
+    mine: Boolean!
+  }
+
   type Recipe {
     id: ID!
     title: String!
@@ -32,6 +46,14 @@ export const typeDefs = /* GraphQL */ `
     steps: [RecipeStep!]!
     tags: [Tag!]!
     aiSummary: String
+    reviewStats: RecipeReviewStats!
+    reviews(first: Int = 50): [RecipeReview!]!
+  }
+
+  input SubmitRecipeReviewInput {
+    rating: Int!
+    body: String
+    authorName: String
   }
 
   type PageInfo {
@@ -140,5 +162,9 @@ export const typeDefs = /* GraphQL */ `
     clearGroceryList: Boolean!
     suggestTagsForRecipe(recipeId: ID!): [Tag!]!
     summarizeRecipe(recipeId: ID!): String!
+    submitRecipeReview(
+      recipeSlug: String!
+      input: SubmitRecipeReviewInput!
+    ): RecipeReview!
   }
 `;

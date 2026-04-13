@@ -14,6 +14,10 @@ const RECIPES = gql`
           title
           slug
           publishedAt
+          reviewStats {
+            averageRating
+            reviewCount
+          }
           tags {
             id
             name
@@ -56,6 +60,11 @@ const tags = computed(() => result.value?.tags ?? []);
 function selectTag(slug: string | null) {
   tagSlug.value = slug;
 }
+
+function formatAvg(n: number | null | undefined) {
+  if (n == null) return "";
+  return n.toFixed(1);
+}
 </script>
 
 <template>
@@ -97,6 +106,14 @@ function selectTag(slug: string | null) {
     <ul v-else class="list">
       <li v-for="e in recipes" :key="e.cursor">
         <RouterLink :to="`/recipe/${e.node.slug}`">{{ e.node.title }}</RouterLink>
+        <span
+          v-if="e.node.reviewStats?.reviewCount"
+          class="rating-summary"
+          :title="`${e.node.reviewStats.reviewCount} review(s)`"
+        >
+           {{ "\u2605" }} {{ formatAvg(e.node.reviewStats.averageRating) }}
+          <span class="count">({{ e.node.reviewStats.reviewCount }})</span>
+        </span>
         <span v-if="e.node.tags?.length" class="meta">
           <span v-for="tg in e.node.tags" :key="tg.id" class="tag-pill">{{ tg.name }}</span>
         </span>
@@ -142,5 +159,14 @@ function selectTag(slug: string | null) {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
+}
+.rating-summary {
+  font-size: 0.9rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.rating-summary .count {
+  font-size: 0.85rem;
+  opacity: 0.85;
 }
 </style>
