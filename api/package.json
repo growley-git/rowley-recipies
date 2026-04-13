@@ -9,19 +9,22 @@
     "start": "node dist/server.js",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
+    "content:import": "tsx src/scripts/contentImport.ts",
     "test": "vitest run"
   },
   "dependencies": {
     "@apollo/server": "^4.11.2",
     "@as-integrations/express4": "^1.1.2",
+    "@paralleldrive/cuid2": "^3.3.0",
     "@prisma/client": "^6.1.0",
     "@rowley/domain": "*",
     "cookie-parser": "^1.4.7",
-    "dotenv": "^16.4.7",
     "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
     "express": "^4.21.1",
     "graphql": "^16.9.0",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "yaml": "^2.8.3"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

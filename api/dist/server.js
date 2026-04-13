@@ -6,10 +6,12 @@ import cors from "cors";
 import express from "express";
 import { randomUUID } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
+import { createRecipeContentProvider } from "./content/provider/factory.js";
 import { createContext } from "./context.js";
 import { typeDefs } from "./graphql/typeDefs.js";
 import { resolvers } from "./resolvers/index.js";
 const prisma = new PrismaClient();
+const recipeContent = createRecipeContentProvider(prisma);
 const app = express();
 const port = Number(process.env.PORT ?? 4000);
 app.use(cors({
@@ -33,7 +35,7 @@ app.use("/graphql", expressMiddleware(apollo, {
             });
         }
         const authHeader = req.headers.authorization;
-        return createContext({ prisma, authHeader, sessionKey });
+        return createContext({ prisma, recipeContent, authHeader, sessionKey });
     },
 }));
 app.get("/health", (_req, res) => {

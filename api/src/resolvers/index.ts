@@ -1,5 +1,4 @@
 import { GraphQLError, GraphQLScalarType, Kind } from "graphql";
-import type { Prisma } from "@prisma/client";
 import {
   formatQuantity,
   mergeGroceryLines,
@@ -16,6 +15,15 @@ function requireAdmin(ctx: GraphQLContext) {
     throw new GraphQLError("Unauthorized", {
       extensions: { code: "UNAUTHENTICATED" },
     });
+  }
+}
+
+function requireDbRecipeSource(ctx: GraphQLContext) {
+  if (!ctx.recipeContent.supportsRecipeMutations()) {
+    throw new GraphQLError(
+      "Recipe and tag mutations are disabled when RECIPE_SOURCE=files. Edit Markdown under content/recipes and run npm run content:import -w @rowley/api, or set RECIPE_SOURCE=db.",
+      { extensions: { code: "BAD_USER_INPUT" } }
+    );
   }
 }
 
@@ -64,10 +72,7 @@ async function groceryListPayloadForSession(ctx: GraphQLContext) {
   const recipes =
     allRecipeIds.length === 0
       ? []
-      : await ctx.prisma.recipe.findMany({
-          where: { id: { in: allRecipeIds } },
-          select: { id: true, title: true, slug: true },
-        });
+      : await ctx.recipeContent.findRecipeMetaByIds(allRecipeIds);
   const byId = new Map(recipes.map((r) => [r.id, r] as const));
   const lines = merged.map((m, idx) => ({
     id: `merged-${idx}`,
@@ -118,9 +123,9 @@ export const resolvers = {
       ctx: GraphQLContext
     ) {
       if (!args.id && !args.slug) return null;
-      return ctx.prisma.recipe.findFirst({
-        where: args.id ? { id: args.id } : { slug: args.slug },
-        include: recipeInclude,
+      return ctx.recipeContent.findFirst({
+        id: args.id ?? undefined,
+        slug: args.slug ?? undefined,
       });
     },
 
@@ -135,61 +140,19 @@ export const resolvers = {
       const first = Math.min(args.pagination?.first ?? 20, 100);
       const after = args.pagination?.after;
       const filter = args.filter ?? {};
-
-      const where: Prisma.RecipeWhereInput = {};
-      if (filter.publishedOnly) {
-        where.publishedAt = { not: null };
-      }
-      if (filter.tagSlug) {
-        where.tags = { some: { tag: { slug: filter.tagSlug } } };
-      }
-      if (filter.search?.trim()) {
-        const q = filter.search.trim();
-        where.OR = [
-          { title: { contains: q } },
-          { steps: { some: { text: { contains: q } } } },
-          { ingredients: { some: { foodName: { contains: q } } } },
-        ];
-      }
-
-      const totalCount = await ctx.prisma.recipe.count({ where });
-
-      const rows =
-        after != null && after !== ""
-          ? await ctx.prisma.recipe.findMany({
-              where,
-              orderBy: { id: "desc" },
-              take: first + 1,
-              cursor: { id: after },
-              skip: 1,
-              include: recipeInclude,
-            })
-          : await ctx.prisma.recipe.findMany({
-              where,
-              orderBy: { id: "desc" },
-              take: first + 1,
-              include: recipeInclude,
-            });
-
-      const hasNextPage = rows.length > first;
-      const nodes = hasNextPage ? rows.slice(0, first) : rows;
-      const edges = nodes.map((r) => ({
-        cursor: r.id,
-        node: r,
-      }));
-
-      return {
-        edges,
-        pageInfo: {
-          hasNextPage,
-          endCursor: edges.length ? edges[edges.length - 1].cursor : null,
+      return ctx.recipeContent.findRecipesConnection({
+        filter: {
+          publishedOnly: filter.publishedOnly,
+          tagSlug: filter.tagSlug,
+          search: filter.search,
         },
-        totalCount,
-      };
+        first,
+        after,
+      });
     },
 
     tags(_: unknown, __: unknown, ctx: GraphQLContext) {
-      return ctx.prisma.tag.findMany({ orderBy: { name: "asc" } });
+      return ctx.recipeContent.listTags();
     },
 
     async groceryList(_: unknown, __: unknown, ctx: GraphQLContext) {
@@ -233,9 +196,10 @@ export const resolvers = {
           }>;
         };
       },
-      ctx: GraphQLContext
+           ctx: GraphQLContext
     ) {
       requireAdmin(ctx);
+      requireDbRecipeSource(ctx);
       const { input } = args;
       const stepRows = normalizeSteps(input.steps);
       const recipe = await ctx.prisma.recipe.create({
@@ -289,6 +253,7 @@ export const resolvers = {
       ctx: GraphQLContext
     ) {
       requireAdmin(ctx);
+      requireDbRecipeSource(ctx);
       const { id, input } = args;
       const stepRows = normalizeSteps(input.steps);
       await ctx.prisma.ingredientLine.deleteMany({ where: { recipeId: id } });
@@ -331,6 +296,7 @@ export const resolvers = {
       ctx: GraphQLContext
     ) {
       requireAdmin(ctx);
+      requireDbRecipeSource(ctx);
       await ctx.prisma.recipe.delete({ where: { id: args.id } });
       return true;
     },
@@ -341,6 +307,7 @@ export const resolvers = {
       ctx: GraphQLContext
     ) {
       requireAdmin(ctx);
+      requireDbRecipeSource(ctx);
       return ctx.prisma.recipe.update({
         where: { id: args.id },
         data: { publishedAt: new Date() },
@@ -354,6 +321,7 @@ export const resolvers = {
       ctx: GraphQLContext
     ) {
       requireAdmin(ctx);
+      requireDbRecipeSource(ctx);
       return ctx.prisma.recipe.update({
         where: { id: args.id },
         data: { publishedAt: null },
@@ -367,6 +335,7 @@ export const resolvers = {
       ctx: GraphQLContext
     ) {
       requireAdmin(ctx);
+      requireDbRecipeSource(ctx);
       const slug = slugify(args.name);
       return ctx.prisma.tag.upsert({
         where: { slug },
@@ -380,10 +349,7 @@ export const resolvers = {
       args: { recipeId: string },
       ctx: GraphQLContext
     ) {
-      const recipe = await ctx.prisma.recipe.findUnique({
-        where: { id: args.recipeId },
-        include: { ingredients: true },
-      });
+      const recipe = await ctx.recipeContent.findForGrocery(args.recipeId);
       if (!recipe) {
         throw new GraphQLError("Recipe not found", {
           extensions: { code: "NOT_FOUND" },
@@ -459,9 +425,7 @@ export const resolvers = {
       if (!aiEnabled()) {
         return [];
       }
-      const recipe = await ctx.prisma.recipe.findUnique({
-        where: { id: args.recipeId },
-      });
+      const recipe = await ctx.recipeContent.findTitle(args.recipeId);
       if (!recipe) {
         throw new GraphQLError("Recipe not found", {
           extensions: { code: "NOT_FOUND" },
@@ -471,17 +435,15 @@ export const resolvers = {
         .toLowerCase()
         .split(/\W+/)
         .filter((w) => w.length > 3);
+      const allTags = await ctx.recipeContent.listTags();
       if (words.length === 0) {
-        return ctx.prisma.tag.findMany({ take: 5 });
+        return allTags.slice(0, 5);
       }
-      const pool = await ctx.prisma.tag.findMany({
-        where: {
-          OR: words.map((w) => ({ name: { contains: w } })),
-        },
-        take: 8,
-      });
-      if (pool.length) return pool;
-      return ctx.prisma.tag.findMany({ take: 5 });
+      const pool = allTags.filter((t) =>
+        words.some((w) => t.name.toLowerCase().includes(w))
+      );
+      if (pool.length) return pool.slice(0, 8);
+      return allTags.slice(0, 5);
     },
 
     async summarizeRecipe(
@@ -490,10 +452,7 @@ export const resolvers = {
       ctx: GraphQLContext
     ) {
       requireAdmin(ctx);
-      const recipe = await ctx.prisma.recipe.findUnique({
-        where: { id: args.recipeId },
-        include: { steps: { orderBy: { sortOrder: "asc" } } },
-      });
+      const recipe = await ctx.recipeContent.findForSummarize(args.recipeId);
       if (!recipe) {
         throw new GraphQLError("Recipe not found", {
           extensions: { code: "NOT_FOUND" },
@@ -513,10 +472,12 @@ export const resolvers = {
         .map((s) => s.text)
         .join(" ")
         .slice(0, 400);
-      await ctx.prisma.recipe.update({
-        where: { id: args.recipeId },
-        data: { aiSummary: summary },
-      });
+      if (ctx.recipeContent.supportsRecipeMutations()) {
+        await ctx.prisma.recipe.update({
+          where: { id: args.recipeId },
+          data: { aiSummary: summary },
+        });
+      }
       return summary;
     },
   },

@@ -1,5 +1,4 @@
 import { GraphQLScalarType } from "graphql";
-import type { Prisma } from "@prisma/client";
 import type { GraphQLContext } from "../context.js";
 export declare const resolvers: {
     DateTime: GraphQLScalarType<Date | null, string | null>;
@@ -7,42 +6,7 @@ export declare const resolvers: {
         recipe(_: unknown, args: {
             id?: string;
             slug?: string;
-        }, ctx: GraphQLContext): Promise<({
-            ingredients: {
-                id: string;
-                foodName: string;
-                unit: string;
-                amount: number;
-                note: string | null;
-                recipeId: string;
-                sortOrder: number;
-                section: string | null;
-            }[];
-            steps: {
-                id: string;
-                recipeId: string;
-                sortOrder: number;
-                text: string;
-            }[];
-            tags: ({
-                tag: {
-                    id: string;
-                    name: string;
-                    slug: string;
-                };
-            } & {
-                recipeId: string;
-                tagId: string;
-            })[];
-        } & {
-            id: string;
-            title: string;
-            slug: string;
-            publishedAt: Date | null;
-            createdAt: Date;
-            updatedAt: Date;
-            aiSummary: string | null;
-        }) | null>;
+        }, ctx: GraphQLContext): Promise<import("../content/provider/types.js").RecipeGraphQLNode | null>;
         recipes(_: unknown, args: {
             filter?: {
                 publishedOnly?: boolean;
@@ -56,42 +20,7 @@ export declare const resolvers: {
         }, ctx: GraphQLContext): Promise<{
             edges: {
                 cursor: string;
-                node: {
-                    ingredients: {
-                        id: string;
-                        foodName: string;
-                        unit: string;
-                        amount: number;
-                        note: string | null;
-                        recipeId: string;
-                        sortOrder: number;
-                        section: string | null;
-                    }[];
-                    steps: {
-                        id: string;
-                        recipeId: string;
-                        sortOrder: number;
-                        text: string;
-                    }[];
-                    tags: ({
-                        tag: {
-                            id: string;
-                            name: string;
-                            slug: string;
-                        };
-                    } & {
-                        recipeId: string;
-                        tagId: string;
-                    })[];
-                } & {
-                    id: string;
-                    title: string;
-                    slug: string;
-                    publishedAt: Date | null;
-                    createdAt: Date;
-                    updatedAt: Date;
-                    aiSummary: string | null;
-                };
+                node: import("../content/provider/types.js").RecipeGraphQLNode;
             }[];
             pageInfo: {
                 hasNextPage: boolean;
@@ -99,7 +28,7 @@ export declare const resolvers: {
             };
             totalCount: number;
         }>;
-        tags(_: unknown, __: unknown, ctx: GraphQLContext): Prisma.PrismaPromise<{
+        tags(_: unknown, __: unknown, ctx: GraphQLContext): Promise<{
             id: string;
             name: string;
             slug: string;
@@ -153,15 +82,25 @@ export declare const resolvers: {
                 }>;
             };
         }, ctx: GraphQLContext): Promise<{
+            tags: ({
+                tag: {
+                    name: string;
+                    id: string;
+                    slug: string;
+                };
+            } & {
+                recipeId: string;
+                tagId: string;
+            })[];
             ingredients: {
-                id: string;
                 foodName: string;
                 unit: string;
                 amount: number;
+                section: string | null;
                 note: string | null;
+                id: string;
                 recipeId: string;
                 sortOrder: number;
-                section: string | null;
             }[];
             steps: {
                 id: string;
@@ -169,21 +108,11 @@ export declare const resolvers: {
                 sortOrder: number;
                 text: string;
             }[];
-            tags: ({
-                tag: {
-                    id: string;
-                    name: string;
-                    slug: string;
-                };
-            } & {
-                recipeId: string;
-                tagId: string;
-            })[];
         } & {
+            publishedAt: Date | null;
             id: string;
             title: string;
             slug: string;
-            publishedAt: Date | null;
             createdAt: Date;
             updatedAt: Date;
             aiSummary: string | null;
@@ -206,15 +135,25 @@ export declare const resolvers: {
                 }>;
             };
         }, ctx: GraphQLContext): Promise<{
+            tags: ({
+                tag: {
+                    name: string;
+                    id: string;
+                    slug: string;
+                };
+            } & {
+                recipeId: string;
+                tagId: string;
+            })[];
             ingredients: {
-                id: string;
                 foodName: string;
                 unit: string;
                 amount: number;
+                section: string | null;
                 note: string | null;
+                id: string;
                 recipeId: string;
                 sortOrder: number;
-                section: string | null;
             }[];
             steps: {
                 id: string;
@@ -222,21 +161,11 @@ export declare const resolvers: {
                 sortOrder: number;
                 text: string;
             }[];
-            tags: ({
-                tag: {
-                    id: string;
-                    name: string;
-                    slug: string;
-                };
-            } & {
-                recipeId: string;
-                tagId: string;
-            })[];
         } & {
+            publishedAt: Date | null;
             id: string;
             title: string;
             slug: string;
-            publishedAt: Date | null;
             createdAt: Date;
             updatedAt: Date;
             aiSummary: string | null;
@@ -247,15 +176,25 @@ export declare const resolvers: {
         publishRecipe(_: unknown, args: {
             id: string;
         }, ctx: GraphQLContext): Promise<{
+            tags: ({
+                tag: {
+                    name: string;
+                    id: string;
+                    slug: string;
+                };
+            } & {
+                recipeId: string;
+                tagId: string;
+            })[];
             ingredients: {
-                id: string;
                 foodName: string;
                 unit: string;
                 amount: number;
+                section: string | null;
                 note: string | null;
+                id: string;
                 recipeId: string;
                 sortOrder: number;
-                section: string | null;
             }[];
             steps: {
                 id: string;
@@ -263,21 +202,11 @@ export declare const resolvers: {
                 sortOrder: number;
                 text: string;
             }[];
-            tags: ({
-                tag: {
-                    id: string;
-                    name: string;
-                    slug: string;
-                };
-            } & {
-                recipeId: string;
-                tagId: string;
-            })[];
         } & {
+            publishedAt: Date | null;
             id: string;
             title: string;
             slug: string;
-            publishedAt: Date | null;
             createdAt: Date;
             updatedAt: Date;
             aiSummary: string | null;
@@ -285,15 +214,25 @@ export declare const resolvers: {
         unpublishRecipe(_: unknown, args: {
             id: string;
         }, ctx: GraphQLContext): Promise<{
+            tags: ({
+                tag: {
+                    name: string;
+                    id: string;
+                    slug: string;
+                };
+            } & {
+                recipeId: string;
+                tagId: string;
+            })[];
             ingredients: {
-                id: string;
                 foodName: string;
                 unit: string;
                 amount: number;
+                section: string | null;
                 note: string | null;
+                id: string;
                 recipeId: string;
                 sortOrder: number;
-                section: string | null;
             }[];
             steps: {
                 id: string;
@@ -301,21 +240,11 @@ export declare const resolvers: {
                 sortOrder: number;
                 text: string;
             }[];
-            tags: ({
-                tag: {
-                    id: string;
-                    name: string;
-                    slug: string;
-                };
-            } & {
-                recipeId: string;
-                tagId: string;
-            })[];
         } & {
+            publishedAt: Date | null;
             id: string;
             title: string;
             slug: string;
-            publishedAt: Date | null;
             createdAt: Date;
             updatedAt: Date;
             aiSummary: string | null;
@@ -323,8 +252,8 @@ export declare const resolvers: {
         upsertTag(_: unknown, args: {
             name: string;
         }, ctx: GraphQLContext): Promise<{
-            id: string;
             name: string;
+            id: string;
             slug: string;
         }>;
         addRecipeToGroceryList(_: unknown, args: {
