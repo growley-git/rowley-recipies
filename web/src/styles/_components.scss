@@ -1,0 +1,98 @@
+@use "sass-tokens" as t;
+@use "mixins" as m;
+
+// Shared layout / UI primitives — override with unlayered scoped Vue styles when needed
+@layer components {
+  .btn {
+    @include m.button-base;
+  }
+
+  .btn-primary {
+    @include m.button-primary;
+  }
+
+  .btn-ghost {
+    @include m.button-ghost;
+  }
+
+  .btn-danger {
+    @include m.button-danger;
+  }
+
+  .btn.small,
+  .btn-sm {
+    padding: 0.35rem 0.65rem;
+    font-size: 0.88rem;
+    border-radius: calc(#{t.$radius-sm} - 1px);
+  }
+
+  .btn-lg {
+    padding: 0.65rem 1.25rem;
+    font-size: 1.05rem;
+  }
+
+  .btn:disabled {
+    @include m.button-disabled;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+  }
+
+  .input,
+  textarea,
+  select {
+    font: inherit;
+    padding: 0.5rem 0.75rem;
+    border-radius: t.$radius-sm;
+    border: 1px solid var(--border);
+    width: 100%;
+    background: #fff;
+
+    &:focus-visible {
+      @include m.focus-ring;
+    }
+  }
+
+  .layout {
+    max-width: var(--container-max);
+    margin: 0 auto;
+    padding: var(--space-lg);
+  }
+
+  .nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2rem;
+  }
+
+  .nav-brand {
+    font-family: t.$font-display;
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 1rem;
+    margin-left: auto;
+    align-items: center;
+  }
+
+  .tag-pill {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: t.$radius-pill;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 0.85rem;
+  }
+}

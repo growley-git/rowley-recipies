@@ -1,0 +1,8 @@
+// Box model + minimal defaults — lowest cascade priority via @layer reset
+@layer reset {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+}

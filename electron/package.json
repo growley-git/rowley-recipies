@@ -1,0 +1,15 @@
+{
+  "name": "@rowley/electron",
+  "version": "0.0.1",
+  "private": true,
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "build:web": "npm run build -w @rowley/web",
+    "pack": "npm run build:web && electron-builder --dir"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  }
+}

@@ -1,0 +1,18 @@
+@use "sass:math";
+@use "sass:meta";
+
+/// Pixel → rem (assumes 16px root).
+@function rem($px, $base: 16) {
+  @if meta.type-of($px) != "number" {
+    @error "rem(): expected a number, got #{meta.inspect($px)}.";
+  }
+  @return math.div($px, $base) * 1rem;
+}
+
+/// Strip unit when you need a raw number (e.g. for calculations).
+@function strip-unit($n) {
+  @if meta.type-of($n) == "number" and not math.is-unitless($n) {
+    @return math.div($n, $n * 0 + 1);
+  }
+  @return $n;
+}

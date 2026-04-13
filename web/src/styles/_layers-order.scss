@@ -1,0 +1,3 @@
+// Establish cascade layer priority (must load before other partials that fill layers).
+// https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@layer
+@layer reset, theme, base, components, utilities;

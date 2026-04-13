@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Recipe {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  aiSummary   String?
+  ingredients IngredientLine[]
+  steps       RecipeStep[]
+  tags        RecipeTag[]
+}
+
+model RecipeStep {
+  id        String @id @default(cuid())
+  recipeId  String
+  recipe    Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  sortOrder Int    @default(0)
+  text      String
+}
+
+model IngredientLine {
+  id        String @id @default(cuid())
+  recipeId  String
+  recipe    Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  sortOrder Int    @default(0)
+  section   String?
+  foodName  String
+  unit      String
+  amount    Float
+  note      String?
+}
+
+model Tag {
+  id      String      @id @default(cuid())
+  name    String      @unique
+  slug    String      @unique
+  recipes RecipeTag[]
+}
+
+model RecipeTag {
+  recipeId String
+  tagId    String
+  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  tag      Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([recipeId, tagId])
+}
+
+model GroceryLine {
+  id         String  @id @default(cuid())
+  sessionKey String
+  foodName   String
+  unit       String
+  amount     Float
+  note       String?
+  recipeId   String?
+
+  @@index([sessionKey])
+}

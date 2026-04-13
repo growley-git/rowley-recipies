@@ -1,0 +1,34 @@
+@use "sass-tokens" as t;
+
+// Design tokens as CSS custom properties (themeable at runtime)
+@layer theme {
+  :root {
+    --bg: #{t.$color-bg};
+    --surface: #{t.$color-surface};
+    --text: #{t.$color-text};
+    --muted: #{t.$color-muted};
+    --accent: #{t.$color-accent};
+    --accent-soft: #{t.$color-accent-soft};
+    --border: #{t.$color-border};
+    --radius: #{t.$radius-md};
+
+    // Derived — color-mix() is supported in all evergreen browsers (see MDN)
+    --accent-contrast: #fff;
+
+    @each $name, $val in t.$space-scale {
+      --space-#{$name}: #{$val};
+    }
+
+    --grid-gap: var(--space-md);
+    --stack-gap: var(--space-md);
+    --cluster-gap: var(--space-xs);
+    --container-max: 960px;
+    --container-prose: 42rem;
+
+    color-scheme: light;
+    font-family: t.$font-sans;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.5;
+  }
+}

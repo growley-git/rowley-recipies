@@ -1,0 +1,156 @@
+@use "sass:map";
+@use "sass-tokens" as t;
+
+// ——— Layout ———
+
+/// CSS Grid: equal columns (1–12).
+@mixin grid($columns: t.$grid-columns, $gap: var(--grid-gap, var(--space-md))) {
+  display: grid;
+  gap: $gap;
+  grid-template-columns: repeat($columns, minmax(0, 1fr));
+}
+
+/// Responsive grid: auto-fit minmax columns (intrinsic grid).
+@mixin grid-auto($min-col: 14rem, $gap: var(--grid-gap, var(--space-md))) {
+  display: grid;
+  gap: $gap;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, $min-col), 1fr));
+}
+
+/// Vertical stack (flex column + gap).
+@mixin stack($gap: var(--stack-gap, var(--space-md))) {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: $gap;
+}
+
+/// Horizontal cluster (flex row + gap + wrap).
+@mixin cluster($gap: var(--cluster-gap, var(--space-sm))) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $gap;
+}
+
+/// Centered single-column prose width.
+@mixin prose-width($max: 42rem) {
+  max-width: $max;
+  margin-inline: auto;
+}
+
+// ——— Typography ———
+
+@mixin heading($level: 1) {
+  font-family: t.$font-display;
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 0;
+  color: var(--text);
+
+  @if $level == 1 {
+    font-size: clamp(1.75rem, 1.35rem + 1.25vw, 2.35rem);
+  } @else if $level == 2 {
+    font-size: clamp(1.35rem, 1.15rem + 0.85vw, 1.85rem);
+  } @else if $level == 3 {
+    font-size: clamp(1.15rem, 1.05rem + 0.45vw, 1.45rem);
+  } @else {
+    font-size: clamp(1rem, 0.95rem + 0.2vw, 1.15rem);
+  }
+}
+
+@mixin body-lede {
+  font-size: 1.05rem;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+// ——— Interactive ———
+
+@mixin focus-ring {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 2px;
+}
+
+@mixin button-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: t.$radius-sm;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+@mixin button-primary {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-color: var(--accent);
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.03);
+  }
+}
+
+@mixin button-ghost {
+  background: transparent;
+  border-color: transparent;
+
+  &:hover:not(:disabled) {
+    background: var(--accent-soft);
+    border-color: var(--border);
+  }
+}
+
+@mixin button-danger {
+  background: #fef2f2;
+  color: #991b1b;
+  border-color: #fecaca;
+
+  &:hover:not(:disabled) {
+    background: #fee2e2;
+  }
+}
+
+@mixin button-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@mixin link-default {
+  color: var(--accent);
+  text-decoration: none;
+  text-underline-offset: 0.15em;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+@mixin link-subtle {
+  color: var(--muted);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--text);
+    text-decoration: underline;
+  }
+}

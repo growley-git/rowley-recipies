@@ -1,0 +1,5 @@
+// Barrel for Vue SFC / partials: `@use "@/styles/kit" as *;`
+// Prefer mixins/functions over @extend from new components.
+@forward "sass-tokens";
+@forward "functions";
+@forward "mixins";

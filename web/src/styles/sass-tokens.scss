@@ -1,0 +1,50 @@
+@use "sass:map";
+
+// Sass-level tokens (compile-time). Use for mixins / functions in .vue or partials.
+// Runtime theming stays on CSS variables in _theme.scss.
+
+$font-sans: "DM Sans", system-ui, sans-serif;
+$font-display: "Fraunces", Georgia, serif;
+
+$color-bg: #faf8f5;
+$color-surface: #ffffff;
+$color-text: #1c1917;
+$color-muted: #78716c;
+$color-accent: #b45309;
+$color-accent-soft: #fff7ed;
+$color-border: #e7e5e4;
+
+$radius-md: 12px;
+$radius-sm: 8px;
+$radius-pill: 999px;
+
+/// 12-column mental model for `.grid--12` + span utilities
+$grid-columns: 12;
+
+/// Spacing scale — mirrored into CSS vars in `_theme.scss`
+$space-scale: (
+  "3xs": 0.125rem,
+  "2xs": 0.25rem,
+  "xs": 0.5rem,
+  "sm": 0.75rem,
+  "md": 1rem,
+  "lg": 1.5rem,
+  "xl": 2rem,
+  "2xl": 3rem,
+) !default;
+
+$breakpoints: (
+  "sm": 30rem,
+  "md": 48rem,
+  "lg": 64rem,
+) !default;
+
+/// Range-syntax media query (CSS Media Queries Level 4)
+@mixin mq-min($key) {
+  $w: map.get($breakpoints, $key);
+  @if $w {
+    @media (width >= #{$w}) {
+      @content;
+    }
+  }
+}

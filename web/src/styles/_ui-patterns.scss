@@ -1,0 +1,133 @@
+@use "sass-tokens" as t;
+@use "mixins" as m;
+
+// Grid, typography utilities, links, MDI alignment — @layer components
+// Material Design Icons (webfont): https://pictogrammers.com/docs/library/mdi/getting-started/webfont/
+@layer components {
+  // Placeholders live inside this layer so @extend keeps cascade-layer semantics.
+  %rowley-stack {
+    @include m.stack;
+  }
+
+  %rowley-cluster {
+    @include m.cluster;
+  }
+
+  %rowley-btn {
+    @include m.button-base;
+  }
+
+  // ——— Containers ———
+  .container {
+    width: min(100% - var(--space-lg) * 2, var(--container-max));
+    margin-inline: auto;
+  }
+
+  .container--prose {
+    width: min(100% - var(--space-lg) * 2, var(--container-prose));
+    margin-inline: auto;
+  }
+
+  // ——— Grid ———
+  .grid {
+    @include m.grid(t.$grid-columns);
+  }
+
+  .grid--auto {
+    @include m.grid-auto(14rem);
+  }
+
+  .grid--dense {
+    @include m.grid(t.$grid-columns, var(--space-sm));
+  }
+
+  @for $i from 1 through t.$grid-columns {
+    .span-#{$i} {
+      grid-column: span #{$i};
+    }
+  }
+
+  @include t.mq-min("md") {
+    .span-md-6 {
+      grid-column: span 6;
+    }
+
+    .span-md-12 {
+      grid-column: span 12;
+    }
+  }
+
+  // ——— Layout primitives ———
+  .stack {
+    @extend %rowley-stack;
+  }
+
+  .cluster {
+    @extend %rowley-cluster;
+  }
+
+  // ——— Heading classes (non-semantic) ———
+  .heading-1 {
+    @include m.heading(1);
+  }
+
+  .heading-2 {
+    @include m.heading(2);
+  }
+
+  .heading-3 {
+    @include m.heading(3);
+  }
+
+  .heading-4 {
+    @include m.heading(4);
+  }
+
+  .lede {
+    @include m.body-lede;
+  }
+
+  // ——— Links ———
+  .link {
+    @include m.link-default;
+  }
+
+  .link--subtle {
+    @include m.link-subtle;
+  }
+
+  .link--nav {
+    @include m.link-subtle;
+    font-weight: 500;
+  }
+
+  // ——— MDI webfont: `.mdi` base + `mdi-{name}` per Pictogrammers docs ———
+  .mdi {
+    flex-shrink: 0;
+  }
+
+  .icon-inline {
+    display: inline-block;
+    vertical-align: -0.125em;
+    line-height: 1;
+  }
+
+  .icon-leading {
+    margin-inline-end: var(--space-2xs);
+  }
+
+  .icon-trailing {
+    margin-inline-start: var(--space-2xs);
+  }
+
+  .icon-text {
+    @include m.cluster(var(--space-xs));
+  }
+
+  .btn-icon {
+    @extend %rowley-btn;
+    padding: 0.4rem 0.55rem;
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+  }
+}
